@@ -50,7 +50,6 @@ def employed_bee(fitness_matrix):
     new_solution = pd.DataFrame(np.zeros((1, fitness_matrix.shape[1] - 2)))
     trial        = pd.DataFrame(np.zeros((fitness_matrix.shape[0], 1)))
     for i in range(0, searching_in_sources.shape[0]):
-        #phi = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
         phi = random.uniform(-1, 1)
         j   = np.random.randint(searching_in_sources.shape[1] - 2, size = 1)[0]
         k   = np.random.randint(searching_in_sources.shape[0], size = 1)[0]
@@ -92,7 +91,6 @@ def probability_matrix(searching_in_sources):
 # Function: Select Next Source
 def source_selection(probability_values):
     random = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
-    #random = random.uniform(0, 1)
     source = 0
     for i in range(0, probability_values.shape[0]):
         if (random <= probability_values.iloc[i, 1]):
@@ -106,7 +104,6 @@ def outlooker_bee(searching_in_sources, probability_values, trial):
     trial_update = trial.copy(deep = True)
     for repeat in range(0, improving_sources.shape[0]):
         i = source_selection(probability_values)
-        #phi = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
         phi = random.uniform(-1, 1)
         j   = np.random.randint(improving_sources.shape[1] - 2, size=1)[0]
         k   = np.random.randint(improving_sources.shape[0], size=1)[0]
@@ -159,10 +156,6 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
         for i in range(0,employed_bees - 1):
             e_bee = employed_bee(e_bee[0])
         probability_values = probability_matrix(e_bee[0])
-        
-        #if (best_value > e_bee[0].iloc[e_bee[0]['Function'].idxmin(),-2]):
-            #best_solution = e_bee[0].iloc[e_bee[0]['Function'].idxmin(),:].copy(deep = True)
-            #best_value = e_bee[0].iloc[e_bee[0]['Function'].idxmin(),-2]
             
         o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1])
         for i in range(0, outlookers_bees - 1):
@@ -182,22 +175,8 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
     return best_solution[0:len(best_solution)-1]
 
 ######################## Part 1 - Usage ####################################
-    
-# Function to be Minimized
-def target_function (variables_values = [0]):
-    func_value = 0.1*(variables_values[0])**2 - 0.5*(variables_values[0]) + 2
-    return func_value
 
-artificial_bee_colony_optimization(food_sources = 6, iterations = 50, min_values = [-10000], max_values = [10000], employed_bees = 20, outlookers_bees = 30)
-
-# Function to be Minimized
-def target_function (variables_values = [0, 0]):
-    func_value = (variables_values[0] - 5)**2 + (variables_values[1] - 5)**2
-    return func_value
-
-artificial_bee_colony_optimization(food_sources = 6, iterations = 50, min_values = [-10,-10], max_values = [10,10], employed_bees = 20, outlookers_bees = 30)
-
-# Function to be Minimized f(x) = -1.0316, x1 = 0.0898, x2 = -0.7126 or x1 = -0.0898, x2 = 0.7126
+# Function to be Minimized. Solution ->  f(x1, x2) = -1.0316; x1 = 0.0898, x2 = -0.7126 or x1 = -0.0898, x2 = 0.7126
 def target_function (variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
