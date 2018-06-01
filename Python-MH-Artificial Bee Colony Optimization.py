@@ -159,17 +159,17 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
     best_value = float("inf")
     while (count <= iterations):
         print("Iteration = ", count, " f(x) = ", best_value)
-        sources = initial_sources(food_sources = food_sources, min_values = min_values , max_values = max_values)
+        sources = initial_sources(food_sources = food_sources, min_values = min_values, max_values = max_values)
         fitness_matrix = fitness_matrix_calc(sources)
        
-        e_bee = employed_bee(fitness_matrix, min_values = min_values , max_values = max_values)
+        e_bee = employed_bee(fitness_matrix, min_values = min_values, max_values = max_values)
         for i in range(0,employed_bees - 1):
-            e_bee = employed_bee(e_bee[0])
+            e_bee = employed_bee(e_bee[0], min_values = min_values, max_values = max_values)
         probability_values = probability_matrix(e_bee[0])
             
-        o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1])
+        o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1], min_values = min_values, max_values = max_values)
         for i in range(0, outlookers_bees - 1):
-            o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1], min_values = min_values , max_values = max_values)
+            o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1], min_values = min_values, max_values = max_values)
 
         if (best_value > o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]):
             best_solution = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),:].copy(deep = True)
