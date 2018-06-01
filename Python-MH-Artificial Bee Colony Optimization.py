@@ -73,7 +73,7 @@ def employed_bee(fitness_matrix, min_values = [-5,-5], max_values = [5,5]):
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > searching_in_sources.iloc[i,-1]):
-            searching_in_sources.iloc[i,j]  = vij
+            searching_in_sources.iloc[i,j]  = new_solution.iloc[0, j]
             searching_in_sources.iloc[i,-2] = new_function_value
             searching_in_sources.iloc[i,-1] = new_fitness
         else:
@@ -131,7 +131,7 @@ def outlooker_bee(searching_in_sources, probability_values, trial, min_values = 
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > improving_sources.iloc[i,-1]):
-            improving_sources.iloc[i,j]  = vij
+            improving_sources.iloc[i,j]  = new_solution.iloc[0, j]
             improving_sources.iloc[i,-2] = new_function_value
             improving_sources.iloc[i,-1] = new_fitness
             trial_update.iloc[i,0] = 0
