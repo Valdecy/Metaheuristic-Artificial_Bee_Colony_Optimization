@@ -47,7 +47,7 @@ def initial_sources (food_sources = 3, min_values = [-5,-5], max_values = [5,5])
     return sources
 
 # Function: Employed Bee
-def employed_bee(fitness_matrix):
+def employed_bee(fitness_matrix, min_values = [-5,-5], max_values = [5,5]):
     searching_in_sources = fitness_matrix.copy(deep = True)
     new_solution = pd.DataFrame(np.zeros((1, fitness_matrix.shape[1] - 2)))
     trial        = pd.DataFrame(np.zeros((fitness_matrix.shape[0], 1)))
@@ -64,6 +64,11 @@ def employed_bee(fitness_matrix):
         for variable in range(0, searching_in_sources.shape[1] - 2):
             new_solution.iloc[0, variable] = searching_in_sources.iloc[i, variable]
         new_solution.iloc[0, j] = vij
+        if (new_solution.iloc[0, j] > max_values[j]):
+            new_solution.iloc[0, j] = max_values[j]
+        elif(new_solution.iloc[0, j] < min_values[j]):
+            new_solution.iloc[0, j] = min_values[j]
+            
         new_function_value = float(target_function(list(new_solution)))
         new_fitness = fitness_calc(new_function_value)
         
@@ -100,7 +105,7 @@ def source_selection(probability_values):
           break     
     return source
 
-def outlooker_bee(searching_in_sources, probability_values, trial):
+def outlooker_bee(searching_in_sources, probability_values, trial, min_values = [-5,-5], max_values = [5,5]):
     improving_sources = searching_in_sources.copy(deep = True)
     new_solution = pd.DataFrame(np.zeros((1, searching_in_sources.shape[1] - 2)))
     trial_update = trial.copy(deep = True)
@@ -118,6 +123,10 @@ def outlooker_bee(searching_in_sources, probability_values, trial):
         for variable in range(0, improving_sources.shape[1] - 2):
             new_solution.iloc[0, variable] = improving_sources.iloc[i, variable]
         new_solution.iloc[0, j] = vij
+        if (new_solution.iloc[0, j] > max_values[j]):
+            new_solution.iloc[0, j] = max_values[j]
+        elif(new_solution.iloc[0, j] < min_values[j]):
+            new_solution.iloc[0, j] = min_values[j]
         new_function_value = float(target_function(list(new_solution)))
         new_fitness = fitness_calc(new_function_value)
         
@@ -153,14 +162,14 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
         sources = initial_sources(food_sources = food_sources, min_values = min_values , max_values = max_values)
         fitness_matrix = fitness_matrix_calc(sources)
        
-        e_bee = employed_bee(fitness_matrix)
+        e_bee = employed_bee(fitness_matrix, min_values = min_values , max_values = max_values)
         for i in range(0,employed_bees - 1):
             e_bee = employed_bee(e_bee[0])
         probability_values = probability_matrix(e_bee[0])
             
         o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1])
         for i in range(0, outlookers_bees - 1):
-            o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1])
+            o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1], min_values = min_values , max_values = max_values)
 
         if (best_value > o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]):
             best_solution = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),:].copy(deep = True)
