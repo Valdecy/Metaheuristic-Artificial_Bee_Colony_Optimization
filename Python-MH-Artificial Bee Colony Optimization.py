@@ -42,7 +42,7 @@ def initial_sources (food_sources = 3, min_values = [-5,-5], max_values = [5,5])
     sources['Fitness' ] = 0.0
     for i in range(0, food_sources):
         for j in range(0, len(min_values)):
-            sources.iloc[i,j] = random.uniform(min_values[j], max_values[j])
+            sources.iloc[i,j] = np.random.normal(0, 1, 1)[0]
     return sources
 
 # Function: Employed Bee
@@ -136,7 +136,7 @@ def scouter_bee(improving_sources, trial_update, min_values = [-5,-5], max_value
     for i in range(0, improving_sources.shape[0]):
         if (trial_update.iloc[i,0] > limit):
             for j in range(0, len(min_values)):
-                improving_sources.iloc[i,j] = random.uniform(min_values[j], max_values[j])
+                improving_sources.iloc[i,j] = np.random.normal(0, 1, 1)[0]
             function_value = target_function(improving_sources.iloc[i,0:improving_sources.shape[1]-2])
             improving_sources.iloc[i,-2] = function_value
             improving_sources.iloc[i,-1] = fitness_calc(function_value)
@@ -144,7 +144,7 @@ def scouter_bee(improving_sources, trial_update, min_values = [-5,-5], max_value
     return improving_sources
 
 # ABC Function
-def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3):  
+def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3, limit = 3):  
     count = 0
     best_value = float("inf")
     while (count <= iterations):
@@ -165,7 +165,7 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
             best_solution = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),:].copy(deep = True)
             best_value = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]
        
-        s_bee = scouter_bee(o_bee[0], o_bee[1], min_values = min_values , max_values = max_values, limit = 3)
+        s_bee = scouter_bee(o_bee[0], o_bee[1], min_values = min_values , max_values = max_values, limit = limit)
         
         sources = s_bee
         
@@ -180,4 +180,4 @@ def target_function (variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
 
-artificial_bee_colony_optimization(food_sources = 15, iterations = 1000, min_values = [-5,-5], max_values = [5,5], employed_bees = 10, outlookers_bees = 20)
+artificial_bee_colony_optimization(food_sources = 15, iterations = 1000, min_values = [-5,-5], max_values = [5,5], employed_bees = 20, outlookers_bees = 20)
