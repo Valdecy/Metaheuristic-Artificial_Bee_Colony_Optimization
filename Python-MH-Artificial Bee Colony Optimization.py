@@ -164,7 +164,7 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
         print("Iteration = ", count, " f(x) = ", best_value)
        
         e_bee = employed_bee(fitness_matrix, min_values = min_values, max_values = max_values)
-        for i in range(0,employed_bees):
+        for i in range(0, employed_bees):
             e_bee = employed_bee(e_bee[0], min_values = min_values, max_values = max_values)
         probability_values = probability_matrix(e_bee[0])
             
