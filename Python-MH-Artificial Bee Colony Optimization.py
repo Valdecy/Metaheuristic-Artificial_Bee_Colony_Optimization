@@ -69,7 +69,8 @@ def employed_bee(fitness_matrix, min_values = [-5,-5], max_values = [5,5]):
         elif(new_solution.iloc[0, j] < min_values[j]):
             new_solution.iloc[0, j] = min_values[j]
             
-        new_function_value = float(target_function(list(new_solution)))
+        new_function_value = float(target_function(new_solution.iloc[0,0:new_solution.shape[1]]))
+        
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > searching_in_sources.iloc[i,-1]):
@@ -127,7 +128,7 @@ def outlooker_bee(searching_in_sources, probability_values, trial, min_values = 
             new_solution.iloc[0, j] = max_values[j]
         elif(new_solution.iloc[0, j] < min_values[j]):
             new_solution.iloc[0, j] = min_values[j]
-        new_function_value = float(target_function(list(new_solution)))
+        new_function_value = float(target_function(new_solution.iloc[0,0:new_solution.shape[1]]))
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > improving_sources.iloc[i,-1]):
@@ -157,27 +158,27 @@ def scouter_bee(improving_sources, trial_update, limit = 3):
 def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3, limit = 3):  
     count = 0
     best_value = float("inf")
+    sources = initial_sources(food_sources = food_sources, min_values = min_values, max_values = max_values)
+    fitness_matrix = fitness_matrix_calc(sources)
+    
     while (count <= iterations):
         print("Iteration = ", count, " f(x) = ", best_value)
-        sources = initial_sources(food_sources = food_sources, min_values = min_values, max_values = max_values)
-        fitness_matrix = fitness_matrix_calc(sources)
        
         e_bee = employed_bee(fitness_matrix, min_values = min_values, max_values = max_values)
-        for i in range(0,employed_bees - 1):
+        for i in range(0,employed_bees):
             e_bee = employed_bee(e_bee[0], min_values = min_values, max_values = max_values)
         probability_values = probability_matrix(e_bee[0])
             
         o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1], min_values = min_values, max_values = max_values)
-        for i in range(0, outlookers_bees - 1):
+        for i in range(0, outlookers_bees):
             o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1], min_values = min_values, max_values = max_values)
 
         if (best_value > o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]):
             best_solution = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),:].copy(deep = True)
             best_value = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]
        
-        s_bee = scouter_bee(o_bee[0], o_bee[1], limit = limit)
-        
-        sources = s_bee
+        sources = scouter_bee(o_bee[0], o_bee[1], limit = limit)
+        fitness_matrix = fitness_matrix_calc(sources)
         
         count = count + 1   
     print(best_solution[0:len(best_solution)-1])
