@@ -15,6 +15,7 @@
 import pandas as pd
 import numpy  as np
 import random
+import math
 import os
 
 # Function: Fitness Value
@@ -29,7 +30,7 @@ def fitness_calc (function_value):
 def fitness_matrix_calc(sources):
     fitness_matrix = sources.copy(deep = True)
     for i in range(0, fitness_matrix.shape[0]):
-        function_value = target_function(fitness_matrix.iloc[i,0:sources.shape[1]])
+        function_value = target_function(fitness_matrix.iloc[i,0:fitness_matrix.shape[1]-2])
         fitness_matrix.iloc[i,-2] = function_value
         fitness_matrix.iloc[i,-1] = fitness_calc(function_value)
     return fitness_matrix
@@ -62,7 +63,7 @@ def employed_bee(fitness_matrix):
         for variable in range(0, searching_in_sources.shape[1] - 2):
             new_solution.iloc[0, variable] = searching_in_sources.iloc[i, variable]
         new_solution.iloc[0, j] = vij
-        new_function_value = float(target_function(new_solution))
+        new_function_value = float(target_function(list(new_solution)))
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > searching_in_sources.iloc[i,-1]):
@@ -116,7 +117,7 @@ def outlooker_bee(searching_in_sources, probability_values, trial):
         for variable in range(0, improving_sources.shape[1] - 2):
             new_solution.iloc[0, variable] = improving_sources.iloc[i, variable]
         new_solution.iloc[0, j] = vij
-        new_function_value = float(target_function(new_solution))
+        new_function_value = float(target_function(list(new_solution)))
         new_fitness = fitness_calc(new_function_value)
         
         if (new_fitness > improving_sources.iloc[i,-1]):
@@ -143,12 +144,11 @@ def scouter_bee(improving_sources, trial_update, min_values = [-5,-5], max_value
     return improving_sources
 
 # ABC Function
-def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3):
-    
+def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3):  
     count = 0
-    best_value = 99999999.9
+    best_value = float("inf")
     while (count <= iterations):
-        print("Iteration = ", count)
+        print("Iteration = ", count, " f(x) = ", best_value)
         sources = initial_sources(food_sources = food_sources, min_values = min_values , max_values = max_values)
         fitness_matrix = fitness_matrix_calc(sources)
        
@@ -168,10 +168,9 @@ def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_va
         s_bee = scouter_bee(o_bee[0], o_bee[1], min_values = min_values , max_values = max_values, limit = 3)
         
         sources = s_bee
-        print(best_solution[0:len(best_solution)-1])
         
-        count = count + 1
-    
+        count = count + 1   
+    print(best_solution[0:len(best_solution)-1])
     return best_solution[0:len(best_solution)-1]
 
 ######################## Part 1 - Usage ####################################
@@ -181,4 +180,4 @@ def target_function (variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
 
-artificial_bee_colony_optimization(food_sources = 12, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 10, outlookers_bees = 20)
+artificial_bee_colony_optimization(food_sources = 50, iterations = 100, min_values = [-5,-5], max_values = [5,5], employed_bees = 10, outlookers_bees = 20)
