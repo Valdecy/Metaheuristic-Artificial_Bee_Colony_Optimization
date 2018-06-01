@@ -81,12 +81,12 @@ def employed_bee(fitness_matrix):
 # Function: Probability Matrix
 def probability_matrix(searching_in_sources):
     probability_values = pd.DataFrame(0, index = searching_in_sources.index, columns = ['probability','cumulative_probability'])
+    source_sum = searching_in_sources['Fitness'].sum()
     for i in range(0, probability_values.shape[0]):
-        probability_values.iloc[i, 0] = searching_in_sources.iloc[i, -1]/searching_in_sources['Fitness'].sum()   
-        if (i == 0):
-            probability_values.iloc[i, 1] =  probability_values.iloc[i, 0] 
-        else:
-            probability_values.iloc[i, 1] = probability_values.iloc[i, 0] + probability_values.iloc[i - 1, 1]     
+        probability_values.iloc[i, 0] = searching_in_sources.iloc[i, -1]/source_sum
+    probability_values.iloc[0, 1] = probability_values.iloc[0, 0]
+    for i in range(1, probability_values.shape[0]):
+        probability_values.iloc[i, 1] = probability_values.iloc[i, 0] + probability_values.iloc[i - 1, 1]  
     return probability_values
 
 # Function: Select Next Source
@@ -180,4 +180,4 @@ def target_function (variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
 
-artificial_bee_colony_optimization(food_sources = 50, iterations = 100, min_values = [-5,-5], max_values = [5,5], employed_bees = 10, outlookers_bees = 20)
+artificial_bee_colony_optimization(food_sources = 15, iterations = 1000, min_values = [-5,-5], max_values = [5,5], employed_bees = 10, outlookers_bees = 20)
