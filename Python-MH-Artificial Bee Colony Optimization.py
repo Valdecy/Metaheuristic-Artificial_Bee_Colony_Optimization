@@ -190,4 +190,4 @@ def target_function (variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
 
-artificial_bee_colony_optimization(food_sources = 20, iterations = 1000, min_values = [-5,-5], max_values = [5,5], employed_bees = 20, outlookers_bees = 20, limit = 40)
+artificial_bee_colony_optimization(food_sources = 20, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 20, outlookers_bees = 20, limit = 40)
