@@ -36,7 +36,7 @@ def fitness_matrix_calc(sources):
     return fitness_matrix
 
 # Function: Initialize Variables
-def initial_sources (food_sources = 3):
+def initial_sources (food_sources = 3, min_values = [-5,-5]):
     sources = pd.DataFrame(np.zeros((food_sources, len(min_values))))
     sources['Function'] = 0.0
     sources['Fitness' ] = 0.0
@@ -157,7 +157,7 @@ def scouter_bee(improving_sources, trial_update, limit = 3):
 def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3, limit = 3):  
     count = 0
     best_value = float("inf")
-    sources = initial_sources(food_sources = food_sources)
+    sources = initial_sources(food_sources = food_sources, min_values = min_values)
     fitness_matrix = fitness_matrix_calc(sources)
     
     while (count <= iterations):
