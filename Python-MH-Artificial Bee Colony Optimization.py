@@ -12,182 +12,163 @@
 ############################################################################
 
 # Required Libraries
-import pandas as pd
 import numpy  as np
 import random
 import math
 import os
 
+# Function
+def target_function():
+    return
+
+# Function: Initialize Variables
+def initial_sources(food_sources = 3, min_values = [-5,-5], max_values = [5, 5], target_function = target_function):
+    sources = np.zeros((food_sources, len(min_values) + 1))
+    for i in range(0, food_sources):
+        for j in range(0, len(min_values)):
+            sources[i,j] = random.uniform(min_values[j], max_values[j])
+        sources[i,-1] = target_function(sources[i,0:sources.shape[1]-1])
+    return sources
+
 # Function: Fitness Value
-def fitness_calc (function_value):
+def fitness_calc(function_value):
     if(function_value >= 0):
         fitness_value = 1.0/(1.0 + function_value)
     else:
         fitness_value = 1.0 + abs(function_value)
     return fitness_value
 
-# Function: Fitness Matrix
-def fitness_matrix_calc(sources):
-    fitness_matrix = sources.copy(deep = True)
-    for i in range(0, fitness_matrix.shape[0]):
-        function_value = target_function(fitness_matrix.iloc[i,0:fitness_matrix.shape[1]-2])
-        fitness_matrix.iloc[i,-2] = function_value
-        fitness_matrix.iloc[i,-1] = fitness_calc(function_value)
-    return fitness_matrix
+# Function: Fitness
+def fitness_function(searching_in_sources): 
+    fitness = np.zeros((searching_in_sources.shape[0], 2))
+    for i in range(0, fitness.shape[0]):
+        #fitness[i,0] = 1/(1+ searching_in_sources[i,-1] + abs(searching_in_sources[:,-1].min()))
+        fitness[i,0] = fitness_calc(searching_in_sources[i,-1])
+    fit_sum = fitness[:,0].sum()
+    fitness[0,1] = fitness[0,0]
+    for i in range(1, fitness.shape[0]):
+        fitness[i,1] = (fitness[i,0] + fitness[i-1,1])
+    for i in range(0, fitness.shape[0]):
+        fitness[i,1] = fitness[i,1]/fit_sum
+    return fitness
 
-# Function: Initialize Variables
-def initial_sources (food_sources = 3, min_values = [-5,-5], max_values = [5,5]):
-    sources = pd.DataFrame(np.zeros((food_sources, len(min_values))))
-    sources['Function'] = 0.0
-    sources['Fitness' ] = 0.0
-    for i in range(0, food_sources):
-        for j in range(0, len(min_values)):
-            sources.iloc[i,j] = random.uniform(min_values[j], max_values[j])
-    return sources
+# Function: Selection
+def roulette_wheel(fitness): 
+    ix = 0
+    random = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
+    for i in range(0, fitness.shape[0]):
+        if (random <= fitness[i, 1]):
+          ix = i
+          break
+    return ix
 
 # Function: Employed Bee
-def employed_bee(fitness_matrix, min_values = [-5,-5], max_values = [5,5]):
-    searching_in_sources = fitness_matrix.copy(deep = True)
-    new_solution = pd.DataFrame(np.zeros((1, fitness_matrix.shape[1] - 2)))
-    trial        = pd.DataFrame(np.zeros((fitness_matrix.shape[0], 1)))
+def employed_bee(sources, min_values = [-5,-5], max_values = [5,5], target_function = target_function):
+    searching_in_sources = np.copy(sources)
+    new_solution         = np.zeros((1, len(min_values)))
+    trial                = np.zeros((sources.shape[0], 1))
     for i in range(0, searching_in_sources.shape[0]):
         phi = random.uniform(-1, 1)
-        j   = np.random.randint(searching_in_sources.shape[1] - 2, size = 1)[0]
+        j   = np.random.randint(len(min_values), size = 1)[0]
         k   = np.random.randint(searching_in_sources.shape[0], size = 1)[0]
         while i == k:
-            k = np.random.randint(searching_in_sources.shape[0], size=1)[0]
-        xij = searching_in_sources.iloc[i, j]
-        xkj = searching_in_sources.iloc[k, j]
-        vij = xij + phi*(xij - xkj)
-        
-        for variable in range(0, searching_in_sources.shape[1] - 2):
-            new_solution.iloc[0, variable] = searching_in_sources.iloc[i, variable]
-        new_solution.iloc[0, j] = vij
-        if (new_solution.iloc[0, j] > max_values[j]):
-            new_solution.iloc[0, j] = max_values[j]
-        elif(new_solution.iloc[0, j] < min_values[j]):
-            new_solution.iloc[0, j] = min_values[j]
-            
-        new_function_value = float(target_function(new_solution.iloc[0,0:new_solution.shape[1]]))
-        
-        new_fitness = fitness_calc(new_function_value)
-        
-        if (new_fitness > searching_in_sources.iloc[i,-1]):
-            searching_in_sources.iloc[i,j]  = new_solution.iloc[0, j]
-            searching_in_sources.iloc[i,-2] = new_function_value
-            searching_in_sources.iloc[i,-1] = new_fitness
+            k = np.random.randint(searching_in_sources.shape[0], size = 1)[0]
+        xij = searching_in_sources[i, j]
+        xkj = searching_in_sources[k, j]
+        vij = xij + phi*(xij - xkj)     
+        for variable in range(0, len(min_values)):
+            new_solution[0, variable] = searching_in_sources[i, variable]
+        new_solution[0, j] = np.clip(vij, min_values[j], max_values[j])        
+        new_function_value = target_function(new_solution[0,0:new_solution.shape[1]])           
+        if (fitness_calc(new_function_value)> fitness_calc(searching_in_sources[i,-1])):
+            searching_in_sources[i,j]  = new_solution[0, j]
+            searching_in_sources[i,-1] = new_function_value
         else:
-            trial.iloc[i,0] = trial.iloc[i,0] + 1
-        
-        for variable in range(0, searching_in_sources.shape[1] - 2):
-            new_solution.iloc[0, variable] = 0.0
-            
+            trial[i,0] = trial[i,0] + 1       
+        for variable in range(0, len(min_values)):
+            new_solution[0, variable] = 0.0           
     return searching_in_sources, trial
 
-# Function: Probability Matrix
-def probability_matrix(searching_in_sources):
-    probability_values = pd.DataFrame(0, index = searching_in_sources.index, columns = ['probability','cumulative_probability'])
-    source_sum = searching_in_sources['Fitness'].sum()
-    for i in range(0, probability_values.shape[0]):
-        probability_values.iloc[i, 0] = searching_in_sources.iloc[i, -1]/source_sum
-    probability_values.iloc[0, 1] = probability_values.iloc[0, 0]
-    for i in range(1, probability_values.shape[0]):
-        probability_values.iloc[i, 1] = probability_values.iloc[i, 0] + probability_values.iloc[i - 1, 1]  
-    return probability_values
-
-# Function: Select Next Source
-def source_selection(probability_values):
-    random = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
-    source = 0
-    for i in range(0, probability_values.shape[0]):
-        if (random <= probability_values.iloc[i, 1]):
-          source = i
-          break     
-    return source
-
-def outlooker_bee(searching_in_sources, probability_values, trial, min_values = [-5,-5], max_values = [5,5]):
-    improving_sources = searching_in_sources.copy(deep = True)
-    new_solution = pd.DataFrame(np.zeros((1, searching_in_sources.shape[1] - 2)))
-    trial_update = trial.copy(deep = True)
+# Function: Oulooker
+def outlooker_bee(searching_in_sources, fitness, trial, min_values = [-5,-5], max_values = [5,5], target_function = target_function):
+    improving_sources = np.copy(searching_in_sources)
+    new_solution      = np.zeros((1, len(min_values)))
+    trial_update      = np.copy(trial)
     for repeat in range(0, improving_sources.shape[0]):
-        i = source_selection(probability_values)
+        i   = roulette_wheel(fitness)
         phi = random.uniform(-1, 1)
-        j   = np.random.randint(improving_sources.shape[1] - 2, size=1)[0]
-        k   = np.random.randint(improving_sources.shape[0], size=1)[0]
+        j   = np.random.randint(len(min_values), size = 1)[0]
+        k   = np.random.randint(improving_sources.shape[0], size = 1)[0]
         while i == k:
-            k = np.random.randint(improving_sources.shape[0], size=1)[0]
-        xij = improving_sources.iloc[i, j]
-        xkj = improving_sources.iloc[k, j]
-        vij = xij + phi*(xij - xkj)
-        
-        for variable in range(0, improving_sources.shape[1] - 2):
-            new_solution.iloc[0, variable] = improving_sources.iloc[i, variable]
-        new_solution.iloc[0, j] = vij
-        if (new_solution.iloc[0, j] > max_values[j]):
-            new_solution.iloc[0, j] = max_values[j]
-        elif(new_solution.iloc[0, j] < min_values[j]):
-            new_solution.iloc[0, j] = min_values[j]
-        new_function_value = float(target_function(new_solution.iloc[0,0:new_solution.shape[1]]))
-        new_fitness = fitness_calc(new_function_value)
-        
-        if (new_fitness > improving_sources.iloc[i,-1]):
-            improving_sources.iloc[i,j]  = new_solution.iloc[0, j]
-            improving_sources.iloc[i,-2] = new_function_value
-            improving_sources.iloc[i,-1] = new_fitness
-            trial_update.iloc[i,0] = 0
+            k = np.random.randint(improving_sources.shape[0], size = 1)[0]
+        xij = improving_sources[i, j]
+        xkj = improving_sources[k, j]
+        vij = xij + phi*(xij - xkj)      
+        for variable in range(0, len(min_values)):
+            new_solution[0, variable] = improving_sources[i, variable]
+        new_solution[0, j] = np.clip(vij,  min_values[j], max_values[j])
+        new_function_value = target_function(new_solution[0,0:new_solution.shape[1]])    
+        if (fitness_calc(new_function_value) > fitness_calc(improving_sources[i,-1])):
+            improving_sources[i,j]  = new_solution[0, j]
+            improving_sources[i,-1] = new_function_value
+            trial_update[i,0]       = 0
         else:
-            trial_update.iloc[i,0] = trial_update.iloc[i,0] + 1
-        
-        for variable in range(0, improving_sources.shape[1] - 2):
-            new_solution.iloc[0, variable] = 0.0    
+            trial_update[i,0] = trial_update[i,0] + 1      
+        for variable in range(0, len(min_values)):
+            new_solution[0, variable] = 0.0    
     return improving_sources, trial_update
 
-def scouter_bee(improving_sources, trial_update, limit = 3):
+# Function: Scouter
+def scouter_bee(improving_sources, trial_update, limit = 3, target_function = target_function):
     for i in range(0, improving_sources.shape[0]):
-        if (trial_update.iloc[i,0] > limit):
-            for j in range(0, improving_sources.shape[1] - 2):
-                improving_sources.iloc[i,j] = np.random.normal(0, 1, 1)[0]
-            function_value = target_function(improving_sources.iloc[i,0:improving_sources.shape[1]-2])
-            improving_sources.iloc[i,-2] = function_value
-            improving_sources.iloc[i,-1] = fitness_calc(function_value)
-
+        if (trial_update[i,0] > limit):
+            for j in range(0, improving_sources.shape[1] - 1):
+                improving_sources[i,j] = np.random.normal(0, 1, 1)[0]
+            function_value = target_function(improving_sources[i,0:improving_sources.shape[1]-1])
+            improving_sources[i,-1] = function_value
     return improving_sources
 
 # ABC Function
-def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3, limit = 3):  
+def artificial_bee_colony_optimization(food_sources = 3, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 3, outlookers_bees = 3, limit = 3, target_function = target_function):  
     count = 0
     best_value = float("inf")
-    sources = initial_sources(food_sources = food_sources, min_values = min_values, max_values = max_values)
-    fitness_matrix = fitness_matrix_calc(sources)
-    
+    sources = initial_sources(food_sources = food_sources, min_values = min_values, max_values = max_values, target_function = target_function)
+    fitness = fitness_function(sources)
     while (count <= iterations):
-        print("Iteration = ", count, " f(x) = ", best_value)
-       
-        e_bee = employed_bee(fitness_matrix, min_values = min_values, max_values = max_values)
+        if (count > 0):
+            print("Iteration = ", count, " f(x) = ", best_value)    
+        e_bee = employed_bee(sources, min_values = min_values, max_values = max_values, target_function = target_function)
         for i in range(0, employed_bees - 1):
-            e_bee = employed_bee(e_bee[0], min_values = min_values, max_values = max_values)
-        probability_values = probability_matrix(e_bee[0])
-            
-        o_bee = outlooker_bee(e_bee[0], probability_values, e_bee[1], min_values = min_values, max_values = max_values)
+            e_bee = employed_bee(e_bee[0], min_values = min_values, max_values = max_values, target_function = target_function)
+        fitness = fitness_function(e_bee[0])          
+        o_bee = outlooker_bee(e_bee[0], fitness, e_bee[1], min_values = min_values, max_values = max_values, target_function = target_function)
         for i in range(0, outlookers_bees - 1):
-            o_bee = outlooker_bee(o_bee[0], probability_values, o_bee[1], min_values = min_values, max_values = max_values)
-
-        if (best_value > o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]):
-            best_solution = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),:].copy(deep = True)
-            best_value = o_bee[0].iloc[o_bee[0]['Function'].idxmin(),-2]
-       
-        sources = scouter_bee(o_bee[0], o_bee[1], limit = limit)
-        fitness_matrix = fitness_matrix_calc(sources)
-        
+            o_bee = outlooker_bee(o_bee[0], fitness, o_bee[1], min_values = min_values, max_values = max_values, target_function = target_function)
+        value = np.copy(o_bee[0][o_bee[0][:,-1].argsort()][0,:])
+        if (best_value > value[-1]):
+            best_solution = np.copy(value)
+            best_value    = np.copy(value[-1])       
+        sources = scouter_bee(o_bee[0], o_bee[1], limit = limit, target_function = target_function)  
+        fitness = fitness_function(sources)
         count = count + 1   
-    print(best_solution[0:len(best_solution)-1])
-    return best_solution[0:len(best_solution)-1]
+    print(best_solution)
+    return best_solution
 
 ######################## Part 1 - Usage ####################################
- 
-# Function to be Minimized. Solution ->  f(x1, x2) = -1.0316; x1 = 0.0898, x2 = -0.7126 or x1 = -0.0898, x2 = 0.7126
-def target_function (variables_values = [0, 0]):
+    
+# Function to be Minimized (Six Hump Camel Back). Solution ->  f(x1, x2) = -1.0316; x1 = 0.0898, x2 = -0.7126 or x1 = -0.0898, x2 = 0.7126
+def six_hump_camel_back(variables_values = [0, 0]):
     func_value = 4*variables_values[0]**2 - 2.1*variables_values[0]**4 + (1/3)*variables_values[0]**6 + variables_values[0]*variables_values[1] - 4*variables_values[1]**2 + 4*variables_values[1]**4
     return func_value
 
-artificial_bee_colony_optimization(food_sources = 20, iterations = 50, min_values = [-5,-5], max_values = [5,5], employed_bees = 20, outlookers_bees = 20, limit = 40)
+abc = artificial_bee_colony_optimization(food_sources = 20, iterations = 10, min_values = [-5,-5], max_values = [5,5], employed_bees = 20, outlookers_bees = 20, limit = 40, target_function = six_hump_camel_back)
+
+# Function to be Minimized (Rosenbrocks Valley). Solution ->  f(x) = 0; xi = 1
+def rosenbrocks_valley(variables_values = [0,0]):
+    func_value = 0
+    last_x = variables_values[0]
+    for i in range(1, len(variables_values)):
+        func_value = func_value + (100 * math.pow((variables_values[i] - math.pow(last_x, 2)), 2)) + math.pow(1 - last_x, 2)
+    return func_value
+
+abc = artificial_bee_colony_optimization(food_sources = 350, iterations = 10, min_values = [-5,-5], max_values = [5,5], employed_bees = 40, outlookers_bees = 40, limit = 80, target_function = rosenbrocks_valley)
